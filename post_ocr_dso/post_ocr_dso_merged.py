@@ -132,7 +132,7 @@ class ValidateFieldsDSO():
         for fieldname, variations in self.fieldname_variations.items():
             g = lambda x: distance.edit_distance(x,self.normalize(literal_to_match))
             variations_match_scores= [g(x) for x in variations]
-            fieldname_match_scores.append(min(variations_match_scores))
+            fieldname_match_scores.append(min(variations_match_scores)/len(self.normalize(literal_to_match)))
         fieldname_match_scores_nparr = np.asarray(fieldname_match_scores)
         return np.argmin(fieldname_match_scores_nparr), np.min(fieldname_match_scores_nparr)
 
