@@ -144,14 +144,38 @@ class ValidateFieldsDSO():
     def map_literal_to_field(self, tokens_to_match):
         #print(f'In function {sys._getframe().f_code.co_name}')
 
+        # split tokens_to_match
+        tokens_to_match_list = tokens_to_match.split(" ")
+
+        current_fieldname_min_score = 100
+        current_fieldname_min_index = -1
+
+        # TODO - take care of empty string in rest_of_tokens
+        for end_index in range(1,len(tokens_to_match_list)+1):
+            literal_to_match = " ".join(tokens_to_match_list[0:end_index])
+            rest_of_tokens = " ".join(tokens_to_match_list[end_index:])
+
+            print('literal_to_match:{}'.format(literal_to_match))
+            print('rest_of_tokens:{}'.format(rest_of_tokens))
+
+            fieldname_min_index,  fieldname_min_score = self.match_literal_fieldname_variations(literal_to_match)
+
+            if (fieldname_min_score <= current_fieldname_min_score):
+                current_fieldname_min_score = fieldname_min_score
+                current_fieldname_min_index = fieldname_min_index
+            else:
+                break
+
+        print('end_index: {}'.format(end_index))
+
         # match with literals in the dictionary
         # iterate through fieldname_variations and for each key, find max match score with its list of variations
-        fieldname_min_index,  fieldname_min_score = self.match_literal_fieldname_variations(tokens_to_match)
+        #fieldname_min_index,  fieldname_min_score = self.match_literal_fieldname_variations(tokens_to_match)
         #print(f'best matched field: {self.required_keys_list[fieldname_min_index ]}, score:{fieldname_min_score}')
-        print('best matched field: {}, score:{}'.format(self.required_keys_list[fieldname_min_index],fieldname_min_score))
+        print('best matched field: {}, score:{}'.format(self.required_keys_list[current_fieldname_min_index],current_fieldname_min_score))
 
 
-        return 'dummy_field', ['dummy', 'tokens', 'to', 'add']
+        return self.required_keys_list[current_fieldname_min_index], " ".join(tokens_to_match_list[0:end_index-1]), " ".join(tokens_to_match_list[end_index-1:])
 
 
 
@@ -224,7 +248,10 @@ class ValidateFieldsDSO():
                     print('tokens_to_match: {}'.format(tokens_to_match))
                     #print(f'tokens_rest_of_line: {tokens_rest_of_line}')
                     print('tokens_rest_of_line: {}'.format(tokens_rest_of_line))
-                    field, tokens_to_add_to_rest_of_line = self.map_literal_to_field(tokens_to_match)
+                    field, tokens_for_field, tokens_to_add_to_rest_of_line = self.map_literal_to_field(tokens_to_match)
+                    print('field: {}'.format(field))
+                    print('tokens_for_field: {}'.format(tokens_for_field))
+                    print('tokens_to_add_to_rest_of_line: {}'.format(tokens_to_add_to_rest_of_line))
 
             output_result_list.append(output_result)
 
