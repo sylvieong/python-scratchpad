@@ -9,11 +9,11 @@ Return results as Pass/Fail for each field name and value, and for the label as 
 from collections import Sequence
 from collections import OrderedDict
 
-import pandas as pd
 import sys
 import string
-from nltk.metrics import distance
 import numpy as np
+from nltk.metrics import distance
+
 
 '''
 validate_label that is returned in the result of the DSO is a dict() with this structure:
@@ -127,7 +127,12 @@ class ValidateFieldsDSO():
                                           'baujahr', 'year of manuf', 'date of manufacture', 'year of manufacture']
     fieldname_variations['DUNS'] = ['duns', 'hersteller']
 
-    def match_literal_fieldname_variations(self, literal_to_match):
+    def normalize(self,s):
+        for p in string.punctuation:
+            s = s.replace(p, '')
+        return s.lower().strip()
+
+    def match_literal_to_fieldname_variations(self, literal_to_match):
         fieldname_match_scores = []
         for fieldname, variations in self.fieldname_variations.items():
             g = lambda x: distance.edit_distance(x,self.normalize(literal_to_match))
@@ -136,17 +141,20 @@ class ValidateFieldsDSO():
         fieldname_match_scores_nparr = np.asarray(fieldname_match_scores)
         return np.argmin(fieldname_match_scores_nparr), np.min(fieldname_match_scores_nparr)
 
-    def normalize(self,s):
-        for p in string.punctuation:
-            s = s.replace(p, '')
-        return s.lower().strip()
-
     def map_literal_to_field(self, tokens_to_match):
-        #print(f'In function {sys._getframe().f_code.co_name}')
+        #print(f'In function {sys._getframe().f_code.co_name}')\
+        print('In function {}'.format(sys._getframe().f_code.co_name))
+
+        # replace "?" with space
+        # strip leading and trailing space
+        # if what's left to match is an empty string, don't do any match and exit with code that no field was found
+        # in calculate, decide what to do with a non-empty line where the field is empty, probably push to extra_info
+        # with value but not field
 
         # split tokens_to_match
         tokens_to_match_list = tokens_to_match.split(" ")
 
+        # TODO - change from exiting loop at local min to finding global min
         current_fieldname_min_score = 100
         current_fieldname_min_index = -1
 
@@ -155,10 +163,10 @@ class ValidateFieldsDSO():
             literal_to_match = " ".join(tokens_to_match_list[0:end_index])
             rest_of_tokens = " ".join(tokens_to_match_list[end_index:])
 
-            print('literal_to_match:{}'.format(literal_to_match))
-            print('rest_of_tokens:{}'.format(rest_of_tokens))
+            #TEMP print('literal_to_match:{}'.format(literal_to_match))
+            #TEMP print('rest_of_tokens:{}'.format(rest_of_tokens))
 
-            fieldname_min_index,  fieldname_min_score = self.match_literal_fieldname_variations(literal_to_match)
+            fieldname_min_index,  fieldname_min_score = self.match_literal_to_fieldname_variations(literal_to_match)
 
             if (fieldname_min_score <= current_fieldname_min_score):
                 current_fieldname_min_score = fieldname_min_score
@@ -177,14 +185,13 @@ class ValidateFieldsDSO():
 
         return self.required_keys_list[current_fieldname_min_index], " ".join(tokens_to_match_list[0:end_index-1]), " ".join(tokens_to_match_list[end_index-1:])
 
-
-
     def __init__(self, *args, **kwargs):
         self.__dict__.update(kwargs)
         super().__init__()
 
-    #def calculate(self, dataset: Sequence, *, res_config: RunResourceConfig = None):
     def calculate(self, dataset: Sequence):
+
+        print('In function {}'.format(sys._getframe().f_code.co_name))
 
         output_result_list = []
 
@@ -226,13 +233,27 @@ class ValidateFieldsDSO():
 
             for line in input_word_list:
                 #print(f'line: {line}')
-                print('line: {}'.format(line))
+                #print('line: {}'.format(line))
 
+                # replace \n with empty
+
+                # replace empty string with special symbol so that we know that a text box
+                # was detected but OCR did not decipher any text
+                for index, text_box in enumerate(line):
+                    if not text_box:
+                        line[index] = '?'
+
+                print('line after processing empty strings: {}'.format(line))
+
+
+
+        
 
                 if len(line) > 1:
                     pass
                     # get leftmost box as matching token, join the rest of the boxes with space
-                    # split leftmost box with ":"
+                    # split leftmost box with ":" 
+                    # add any boxes except the leftmost box after the split, to the rest of the boxes
 
                 else:
                     # split text by ":" and get leftmost token, join the rest of the boxes together with ":"
@@ -243,15 +264,15 @@ class ValidateFieldsDSO():
                     tokens_rest_of_line = tokens_rest_of_line.strip()
 
                     #TODO get rid of \n at beginning, end and anywhere and replace with space?
-                    # tokens_rest_of_line.strip()
                     #print(f'tokens_to_match: {tokens_to_match}')
-                    print('tokens_to_match: {}'.format(tokens_to_match))
+                    #TEMP print('tokens_to_match: {}'.format(tokens_to_match))
                     #print(f'tokens_rest_of_line: {tokens_rest_of_line}')
-                    print('tokens_rest_of_line: {}'.format(tokens_rest_of_line))
-                    field, tokens_for_field, tokens_to_add_to_rest_of_line = self.map_literal_to_field(tokens_to_match)
-                    print('field: {}'.format(field))
-                    print('tokens_for_field: {}'.format(tokens_for_field))
-                    print('tokens_to_add_to_rest_of_line: {}'.format(tokens_to_add_to_rest_of_line))
+                    #TEMP print('tokens_rest_of_line: {}'.format(tokens_rest_of_line))
+
+                    #TEMP field, tokens_of_field, tokens_to_add_to_rest_of_line = self.map_literal_to_field(tokens_to_match)
+                    #TEMP print('field: {}'.format(field))
+                    #TEMP print('tokens_for_field: {}'.format(tokens_of_field))
+                    #TEMP print('tokens_to_add_to_rest_of_line: {}'.format(tokens_to_add_to_rest_of_line))
 
             output_result_list.append(output_result)
 
