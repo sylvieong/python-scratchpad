@@ -235,25 +235,41 @@ class ValidateFieldsDSO():
                 #print(f'line: {line}')
                 #print('line: {}'.format(line))
 
-                # replace \n with empty
-
-                # replace empty string with special symbol so that we know that a text box
+                # 1. remove \n   
+                # 2. replace empty string with special symbol so that we know that a text box
                 # was detected but OCR did not decipher any text
                 for index, text_box in enumerate(line):
+                    #DEBUG print('text_box: {}'.format(text_box ))
+                    text_box = text_box.replace("\n", "")
+                    #DEBUG print('text_box, after replacing slash n: {}'.format(text_box ))
                     if not text_box:
                         line[index] = '?'
+                    else:
+                        line[index] = text_box
 
                 print('line after processing empty strings: {}'.format(line))
 
 
-
-        
-
                 if len(line) > 1:
-                    pass
                     # get leftmost box as matching token, join the rest of the boxes with space
                     # split leftmost box with ":" 
                     # add any boxes except the leftmost box after the split, to the rest of the boxes
+                    leftmost_textbox_tokens = line[0].split(":")
+                    tokens_to_match = leftmost_textbox_tokens[0]
+                    tokens_to_match = tokens_to_match.strip()
+                    tokens_rest_of_leftmost_textbox = ':'.join(leftmost_textbox_tokens[1:])
+                    tokens_rest_of_leftmost_textbox=[tokens_rest_of_leftmost_textbox.strip()]
+                    #DEBUG print('tokens_to_match:')
+                    #DEBUG print(tokens_to_match)
+                    #DEBUG print('tokens_rest_of_leftmost_textbox:')
+                    #DEBUG print(tokens_rest_of_leftmost_textbox)
+                    #DEBUG print('line[1:]:')
+                    #DEBUG print(line[1:])
+
+                    tokens_rest_of_line = ' '.join(tokens_rest_of_leftmost_textbox+line[1:])
+                    tokens_rest_of_line = tokens_rest_of_line.strip()
+                    #DEBUG print('tokens_rest_of_line:')
+                    #DEBUG print(tokens_rest_of_line)
 
                 else:
                     # split text by ":" and get leftmost token, join the rest of the boxes together with ":"
