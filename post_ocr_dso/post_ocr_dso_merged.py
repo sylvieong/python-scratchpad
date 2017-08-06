@@ -113,10 +113,10 @@ class ValidateFieldsDSO():
 
     fieldname_variations = OrderedDict()
     fieldname_variations['property_of_unit'] = ['property of unit', 'eigentum', 'eigentum der', 'kundeneigentum',
-                                                'eigentum firma']
+                                                'eigentum firma', 'eigentumproperty']
     fieldname_variations['inventory_number'] = ['inventory number', 'inventarnummer', 'invent-nr.', 'tool no.',
-                                                'wekrzeugnummer']
-    fieldname_variations['part_number'] = ['part no', 'part number', 'teilenummer',  'audi teilenummer']
+                                                'wekrzeugnummer', 'audi inventar-nr', 'audi inventarnummerinventorynumber', 'inventarnummer audi']
+    fieldname_variations['part_number'] = ['part no', 'part number', 'teilenummer',  'audi teilenummer', 'audi teilenummerpartnumber']
     fieldname_variations['part_designation'] = ['part designation', 'part name', 'description', 'teilebenennung',
                                                 'bezeichnung']
     fieldname_variations['project'] = ['project', 'vehicle object', 'fahrzeugprojekt']
@@ -130,7 +130,7 @@ class ValidateFieldsDSO():
     def normalize(self,s):
         for p in string.punctuation:
             s = s.replace(p, '')
-        return s.lower().strip()
+        return s.lower()  #.strip() 
 
     def match_literal_to_fieldname_variations(self, literal_to_match):
         fieldname_match_scores = []
@@ -141,15 +141,44 @@ class ValidateFieldsDSO():
         fieldname_match_scores_nparr = np.asarray(fieldname_match_scores)
         return np.argmin(fieldname_match_scores_nparr), np.min(fieldname_match_scores_nparr)
 
+
+    def map_literal_to_field_char_level(self, input_tokens_to_match_string): 
+        #print(f'In function {sys._getframe().f_code.co_name}')\
+        ##DEBUG  print('In function {}'.format(sys._getframe().f_code.co_name))
+
+        tokens_to_match_string = input_tokens_to_match_string.replace("?", " ")
+
+        tokens_to_match_substring_match_scores = []
+        tokens_to_match_substring_match_fieldname_indices = []
+
+        for end_index in range(len(tokens_to_match_string),0,-1): # range(1,len(tokens_to_match_string)+1):
+            literal_to_match = tokens_to_match_string[0:end_index]
+            #DEBUG print('literal_to_match {}'.format(literal_to_match))
+
+            match_fieldname_index,  match_score = self.match_literal_to_fieldname_variations(literal_to_match)
+            tokens_to_match_substring_match_scores.append(match_score)
+            tokens_to_match_substring_match_fieldname_indices.append(match_fieldname_index)
+           
+        tokens_to_match_substring_match_scores_nparr = np.asarray(tokens_to_match_substring_match_scores)
+        min_index = np.argmin(tokens_to_match_substring_match_scores_nparr)
+
+        return self.required_keys_list[tokens_to_match_substring_match_fieldname_indices[min_index]], \
+        input_tokens_to_match_string[0: len(input_tokens_to_match_string)- min_index].strip(), \
+        input_tokens_to_match_string[len(input_tokens_to_match_string)- min_index:].strip(), \
+        np.min(tokens_to_match_substring_match_scores_nparr)
+
+        #note: return the original input_tokens_to_match_string)
+        #return field, field_name_str, tokens_to_add_to_rest_of_line_str, match_score
+        #input_tokens_to_match_string[0: min_index+1].strip(), 
+       # input_tokens_to_match_string[min_index+1:].strip(), 
+ 
+
     def map_literal_to_field(self, tokens_to_match):
         #print(f'In function {sys._getframe().f_code.co_name}')\
         print('In function {}'.format(sys._getframe().f_code.co_name))
 
         # replace "?" with space
         # strip leading and trailing space
-        # if what's left to match is an empty string, don't do any match and exit with code that no field was found
-        # in calculate, decide what to do with a non-empty line where the field is empty, probably push to extra_info
-        # with value but not field
 
         # split tokens_to_match
         tokens_to_match_list = tokens_to_match.split(" ")
@@ -248,7 +277,7 @@ class ValidateFieldsDSO():
                     else:
                         line[index] = text_box
 
-                print('line after processing empty strings: {}'.format(line))
+                ##DEBUG print('line after processing empty strings: {}'.format(line))
 
                 # get leftmost box as candidate for tokens to match with field, join the rest of the boxes with space
                 # split leftmost box with ":" 
@@ -260,14 +289,14 @@ class ValidateFieldsDSO():
                 tokens_rest_of_leftmost_textbox_str = ':'.join(leftmost_textbox_tokens_list[1:])
                 tokens_rest_of_leftmost_textbox_str = tokens_rest_of_leftmost_textbox_str.strip()
 
-                print('tokens_to_match_str: {}'.format(tokens_to_match_str))
+                ##DEBUG print('tokens_to_match_str: {}'.format(tokens_to_match_str))
                 #DEBUG print('tokens_rest_of_leftmost_textbox_str: {}'.format(tokens_rest_of_leftmost_textbox_str))
                 #DEBUG print(tokens_rest_of_leftmost_textbox_str)
                 #DEBUG print('line[1:]: {}'.format(line[1:]))
 
                 tokens_rest_of_line_str = ' '.join([tokens_rest_of_leftmost_textbox_str]+line[1:])
                 tokens_rest_of_line_str = tokens_rest_of_line_str.strip()
-                print('tokens_rest_of_line_str: {}'.format(tokens_rest_of_line_str))
+                ##DEBUG print('tokens_rest_of_line_str: {}'.format(tokens_rest_of_line_str))
 
                 # at this point, we are looking for the field name in tokens_to_match_str
                 # and we assume that the field variable is tokens_rest_of_line_str, possibly pre-fixed with part of tokens_to_match_str
@@ -276,12 +305,13 @@ class ValidateFieldsDSO():
                     if tokens_rest_of_line_str:
                         output_result["extra_info"].append(["_",tokens_rest_of_line_str])
                 else:
-                    field, field_name_str, tokens_to_add_to_rest_of_line_str = self.map_literal_to_field(tokens_to_match_str)
+                    field, field_name_str, tokens_to_add_to_rest_of_line_str, match_score = self.map_literal_to_field_char_level(tokens_to_match_str)
                     print('field: {}'.format(field))
                     print('field_name_str: {}'.format(field_name_str))
-                    print('tokens_to_add_to_rest_of_line_str: {}'.format(tokens_to_add_to_rest_of_line_str))
-                    field_var_str = tokens_to_add_to_rest_of_line_str + ' ' + tokens_rest_of_line_str
+                    ##DEBUG  print('tokens_to_add_to_rest_of_line_str: {}'.format(tokens_to_add_to_rest_of_line_str))
+                    field_var_str = tokens_to_add_to_rest_of_line_str.strip() + ' ' + tokens_rest_of_line_str
                     print('field_var_str: {}'.format(field_var_str))
+                    print('match_score: {}'.format(match_score))
 
             output_result_list.append(output_result)
 
