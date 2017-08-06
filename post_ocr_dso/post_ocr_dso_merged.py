@@ -182,6 +182,7 @@ class ValidateFieldsDSO():
         #print(f'best matched field: {self.required_keys_list[fieldname_min_index ]}, score:{fieldname_min_score}')
         print('best matched field: {}, score:{}'.format(self.required_keys_list[current_fieldname_min_index],current_fieldname_min_score))
 
+        # TODO - strip both strings that are returned
 
         return self.required_keys_list[current_fieldname_min_index], " ".join(tokens_to_match_list[0:end_index-1]), " ".join(tokens_to_match_list[end_index-1:])
 
@@ -233,7 +234,7 @@ class ValidateFieldsDSO():
 
             for line in input_word_list:
                 #print(f'line: {line}')
-                #print('line: {}'.format(line))
+                print('line raw: {}'.format(line))
 
                 # 1. remove \n   
                 # 2. replace empty string with special symbol so that we know that a text box
@@ -249,47 +250,47 @@ class ValidateFieldsDSO():
 
                 print('line after processing empty strings: {}'.format(line))
 
+                # get leftmost box as candidate for tokens to match with field, join the rest of the boxes with space
+                # split leftmost box with ":" 
+                # add any boxes except the leftmost box after the split, to the rest of the boxes
+                leftmost_textbox_tokens_list = line[0].split(":")
+                tokens_to_match_str = leftmost_textbox_tokens_list[0]
+                tokens_to_match_str = tokens_to_match_str.strip()
 
-                if len(line) > 1:
-                    # get leftmost box as matching token, join the rest of the boxes with space
-                    # split leftmost box with ":" 
-                    # add any boxes except the leftmost box after the split, to the rest of the boxes
-                    leftmost_textbox_tokens = line[0].split(":")
-                    tokens_to_match = leftmost_textbox_tokens[0]
-                    tokens_to_match = tokens_to_match.strip()
-                    tokens_rest_of_leftmost_textbox = ':'.join(leftmost_textbox_tokens[1:])
-                    tokens_rest_of_leftmost_textbox=[tokens_rest_of_leftmost_textbox.strip()]
+                tokens_rest_of_leftmost_textbox_str = ':'.join(leftmost_textbox_tokens_list[1:])
+                tokens_rest_of_leftmost_textbox_str = tokens_rest_of_leftmost_textbox_str.strip()
+
+                print('tokens_to_match_str: {}'.format(tokens_to_match_str))
+                #DEBUG print('tokens_rest_of_leftmost_textbox_str: {}'.format(tokens_rest_of_leftmost_textbox_str))
+                #DEBUG print(tokens_rest_of_leftmost_textbox_str)
+                #DEBUG print('line[1:]: {}'.format(line[1:]))
+
+                tokens_rest_of_line_str = ' '.join([tokens_rest_of_leftmost_textbox_str]+line[1:])
+                tokens_rest_of_line_str = tokens_rest_of_line_str.strip()
+                print('tokens_rest_of_line_str: {}'.format(tokens_rest_of_line_str))
+
+                # at this point, we are looking for the field name in tokens_to_match_str
+                # and we assume that the field variable is tokens_rest_of_line_str, possibly pre-fixed with part of tokens_to_match_str
+
+                if tokens_to_match_str == "?":
+                    if tokens_rest_of_line_str:
+                        output_result["extra_info"].append(["_",tokens_rest_of_line_str])
+                else:
+                    field, field_name_str, tokens_to_add_to_rest_of_line_str = self.map_literal_to_field(tokens_to_match_str)
+                    print('field: {}'.format(field))
+                    print('field_name_str: {}'.format(field_name_str))
+                    print('tokens_to_add_to_rest_of_line_str: {}'.format(tokens_to_add_to_rest_of_line_str))
+                    field_var_str = tokens_to_add_to_rest_of_line_str + ' ' + tokens_rest_of_line_str
+                    print('field_var_str: {}'.format(field_var_str))
+
+            output_result_list.append(output_result)
+
+        return output_result_list
+
+
                     #DEBUG print('tokens_to_match:')
                     #DEBUG print(tokens_to_match)
                     #DEBUG print('tokens_rest_of_leftmost_textbox:')
                     #DEBUG print(tokens_rest_of_leftmost_textbox)
                     #DEBUG print('line[1:]:')
                     #DEBUG print(line[1:])
-
-                    tokens_rest_of_line = ' '.join(tokens_rest_of_leftmost_textbox+line[1:])
-                    tokens_rest_of_line = tokens_rest_of_line.strip()
-                    #DEBUG print('tokens_rest_of_line:')
-                    #DEBUG print(tokens_rest_of_line)
-
-                else:
-                    # split text by ":" and get leftmost token, join the rest of the boxes together with ":"
-                    line_tokens = line[0].split(":")
-                    tokens_to_match = line_tokens[0]
-                    tokens_to_match = tokens_to_match.strip()
-                    tokens_rest_of_line = ':'.join(line_tokens[1:])
-                    tokens_rest_of_line = tokens_rest_of_line.strip()
-
-                    #TODO get rid of \n at beginning, end and anywhere and replace with space?
-                    #print(f'tokens_to_match: {tokens_to_match}')
-                    #TEMP print('tokens_to_match: {}'.format(tokens_to_match))
-                    #print(f'tokens_rest_of_line: {tokens_rest_of_line}')
-                    #TEMP print('tokens_rest_of_line: {}'.format(tokens_rest_of_line))
-
-                    #TEMP field, tokens_of_field, tokens_to_add_to_rest_of_line = self.map_literal_to_field(tokens_to_match)
-                    #TEMP print('field: {}'.format(field))
-                    #TEMP print('tokens_for_field: {}'.format(tokens_of_field))
-                    #TEMP print('tokens_to_add_to_rest_of_line: {}'.format(tokens_to_add_to_rest_of_line))
-
-            output_result_list.append(output_result)
-
-        return output_result_list
