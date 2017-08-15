@@ -13,6 +13,7 @@ def normalize(s):
 
 required_keys_list = ['property_of_unit', 'inventory_number', 'part_number', 'part_designation', 'project', 'weight_kg', 'dimension', 'issue_date', 'DUNS']
 
+filename_key = "filename"
 
 #for key in required_keys_list:                  # do this just so that keys will be in the right order
 #    fieldname_variations_merged[key] = []
@@ -24,8 +25,9 @@ for key in required_keys_list:
     fieldname_variations_from_annotations[key] = []
 
 for annotation in annotations:
+    print(f'file {annotation[filename_key]}')
     for key in required_keys_list:
-        if annotation[key]["field_pass_fail"] == "Pass":
+        if annotation[key]["field_pass_fail"].lower().strip() == "pass":
                 fieldname_variations_from_annotations[key].append(normalize(annotation[key]["field_text_literal"]))
                 
 print(fieldname_variations_from_annotations)
