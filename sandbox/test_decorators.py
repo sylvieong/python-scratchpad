@@ -25,7 +25,15 @@ def my_decorator(some_function):
 
     return wrapper
 
-
+@my_decorator
 def just_some_function():
     print("Wheee!")
 
+
+if __name__ == "__main__":
+    print(just_some_function)
+    just_some_function()
+    print(parent(10))
+    print(parent(10)())
+    print(parent(11))
+    print(parent(11)())
