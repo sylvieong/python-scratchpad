@@ -1,39 +1,19 @@
-def parent(num):
+def call(tensor: int, mode: str):
+    print(f'In call function, tensor: {tensor}, mode: {mode}')
+    return tensor*2
 
-    def first_child():
-        return "Printing from the first_child() function."
+def wrap_mode(mode: str):
 
-    def second_child():
-        return "Printing from the second_child() function."
-
-    try:
-        assert num == 10
-        return first_child
-    except AssertionError:
-        return second_child
-
-
-def my_decorator(some_function):
-
-    def wrapper():
-
-        print("Something is happening before some_function() is called.")
-
-        some_function()
-
-        print("Something is happening after some_function() is called.")
-
-    return wrapper
-
-@my_decorator
-def just_some_function():
-    print("Wheee!")
+    def call_with_mode(tensor: int):
+        out = call(tensor, mode)
+        return out
+    
+    return call_with_mode
 
 
 if __name__ == "__main__":
-    print(just_some_function)
-    just_some_function()
-    print(parent(10))
-    print(parent(10)())
-    print(parent(11))
-    print(parent(11)())
+    call_fn = wrap_mode('a')
+    call_fn(3)
+    
+
+    
