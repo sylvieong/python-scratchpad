@@ -3,7 +3,7 @@ class Employee:
         #self.first = first # replace by caling setter for the fullname property
         #self.last = last   # for the fullname property
         #self.email = first.lower() + "." + last.lower() + "@gmail.com" #replaced by a method
-        self.fullname = first + " " + last
+        self.fullname_set = first + " " + last
 
     @property     
     def email(self):
@@ -18,7 +18,8 @@ class Employee:
         return first + " " + last
 
     @fullname.setter
-    def fullname(self, name):
+    #def fullname(self, name):  # can I use a different method name ?
+    def fullname_set(self, name):  # using a different name to tease out where ?
         first, last = name.split(" ")
         self.first = first
         self.last = last    
@@ -51,7 +52,7 @@ if __name__ == "__main__":
 
     print(emp1.fullname)
 
-    emp1.fullname = "Jimmy Page"
+    emp1.fullname_set = "Jimmy Page"
 
     print(emp1.fullname)
     print(emp1.email)
