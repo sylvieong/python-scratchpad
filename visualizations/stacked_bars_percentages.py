@@ -35,12 +35,12 @@ blueBars = [i / j * 100 for i,j in zip(df['blueBars'], totals)]
 # plot
 barWidth = 0.85
 names = ('City L','City M','City N','City O','City P')
-# Create green Bars
-plt.bar(r, greenBars, color='#b5ffb9', edgecolor='white', width=barWidth, label="IME Ind 0")
-# Create orange Bars
-plt.bar(r, orangeBars, bottom=greenBars, color='#f9bc86', edgecolor='white', width=barWidth, label="IME Ind 1")
-# Create blue Bars
-plt.bar(r, blueBars, bottom=[i+j for i,j in zip(greenBars, orangeBars)], color='#a3acff', edgecolor='white', width=barWidth, label="IME Ind Unk")
+# Create green Bars #b5ffb9
+plt.bar(r, greenBars, color='green', edgecolor='white', width=barWidth, label="IME Ind 0")
+# Create orange Bars #f9bc86
+plt.bar(r, orangeBars, bottom=greenBars, color='orange', edgecolor='white', width=barWidth, label="IME Ind 1")
+# Create blue Bars #a3acff
+plt.bar(r, blueBars, bottom=[i+j for i,j in zip(greenBars, orangeBars)], color='blue', edgecolor='white', width=barWidth, label="IME Ind Unk")
 
 # Custom x axis
 plt.xticks(r, names)
@@ -52,5 +52,28 @@ plt.legend(loc='upper left', bbox_to_anchor=(1,1), ncol=1)
 
  
 # Show graphic
+plt.show()
+
+### grouped bars
+
+# set width of bar
+barWidth = 0.25
+
+# Set position of bar on X axis
+r1 = np.arange(len(greenBars))
+r2 = [x + barWidth/3 for x in r1] #[x + barWidth/2 for x in r1]
+r3 = [x + barWidth/3 for x in r2]
+ 
+# Make the plot - #7f6d5f, #557f2d, #2d7f5e
+plt.bar(r1, greenBars, color=(0.0, 0.5, 0.0, 0.2), width=barWidth, edgecolor='white', label='var1')
+plt.bar(r2, orangeBars, color=(0.5, 0.0, 0.0, 0.2), width=barWidth, edgecolor='white', label='var2')
+plt.bar(r3, blueBars, color=(0.0, 0.3, 0.7, 0.2), width=barWidth, edgecolor='white', label='var3')
+ 
+# Add xticks on the middle of the group bars
+plt.xlabel('group', fontweight='bold')
+plt.xticks([r + barWidth for r in range(len(greenBars))], ['A', 'B', 'C', 'D', 'E'])
+ 
+# Create legend & Show graphic
+plt.legend()
 plt.show()
  
